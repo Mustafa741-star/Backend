@@ -19,7 +19,6 @@ const registerUser = asyncHandler( async (req, res) => {
 
     // get user details from frontend
     const {fullName, email, username, password} = req.body
-    console.log("email: ", email);
 
     // validate the user data
 
@@ -31,7 +30,7 @@ const registerUser = asyncHandler( async (req, res) => {
      
     // check if user already exists(we can use email id or username )
 
-    const exisedUser = User.findOne({
+    const exisedUser = await User.findOne({
         $or: [{username}, {email}]
     })
 
@@ -39,9 +38,19 @@ const registerUser = asyncHandler( async (req, res) => {
         throw new ApiError(409, "User with email and username already exists")
     }
 
+    // console.log(req.files);
+    
+
     const avatarLocalPath = req.files?.avatar[0]?.path;
 
-    const coverImageLocalPath = req.files?.coverImage[0]?.path;
+    // const coverImageLocalPath = req.files?.coverImage[0]?.path;
+
+    let coverImageLocalPath;
+    if(req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
+        coverImageLocalPath = req.files.coverImage[0].path
+    }
+
+
 
     if(!avatarLocalPath) {
         throw new ApiError(400, "Avatar file is required")
@@ -57,7 +66,7 @@ const registerUser = asyncHandler( async (req, res) => {
     const user = await User.create({
         fullName,
         avatar: avatar.url,
-        coverImage: coverImage?.url || " ",
+        coverImage: coverImage?.url || "",
         email,
         password,
         username: username.toLowerCase()
